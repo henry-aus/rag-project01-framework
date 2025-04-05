@@ -20,7 +20,8 @@ const EmbeddingFile = () => {
     ],
     bedrock: [
       { value: 'cohere.embed-english-v3', label: 'cohere.embed-english-v3' },
-      { value: 'cohere.embed-multilingual-v3', label: 'cohere.embed-multilingual-v3' }
+      { value: 'cohere.embed-multilingual-v3', label: 'cohere.embed-multilingual-v3' },
+      { value: 'amazon.titan-embed-text-v2:0', label: 'amazon.titan-embed-text-v2:0' }
     ],
     huggingface: [
       { value: 'sentence-transformers/all-mpnet-base-v2', label: 'all-mpnet-base-v2' },
