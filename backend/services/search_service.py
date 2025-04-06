@@ -32,7 +32,8 @@ class SearchService:
             List[Dict[str, str]]: 支持的向量数据库提供商列表
         """
         return [
-            {"id": VectorDBProvider.MILVUS.value, "name": "Milvus"}
+            {"id": VectorDBProvider.MILVUS.value, "name": "Milvus"},
+            {"id": VectorDBProvider.CHROMA.value, "name": "Chroma"}
         ]
 
     def list_collections(self, provider: str = VectorDBProvider.MILVUS.value) -> List[Dict[str, Any]]:

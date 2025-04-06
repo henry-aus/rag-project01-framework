@@ -6,7 +6,8 @@ import logging
 from pathlib import Path
 from pymilvus import connections, utility
 from pymilvus import Collection, DataType, FieldSchema, CollectionSchema
-from utils.config import VectorDBProvider, MILVUS_CONFIG  # Updated import
+from utils.config import VectorDBProvider, MILVUS_CONFIG, CHROMA_CONFIG  # Updated import
+import chromadb
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class VectorDBConfig:
         self.provider = provider
         self.index_mode = index_mode
         self.milvus_uri = MILVUS_CONFIG["uri"]
+        self.chroma_uri = CHROMA_CONFIG["uri"]
 
     def _get_milvus_index_type(self, index_mode: str) -> str:
         """
@@ -105,6 +107,8 @@ class VectorStoreService:
         # 根据不同的数据库进行索引
         if config.provider == VectorDBProvider.MILVUS:
             result = self._index_to_milvus(embeddings_data, config)
+        elif config.provider == VectorDBProvider.CHROMA:
+            result = self._index_to_chroma(embeddings_data, config)    
         
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
@@ -156,19 +160,7 @@ class VectorStoreService:
             索引结果信息字典
         """
         try:
-            # 使用 filename 作为 collection 名称前缀
-            filename = embeddings_data.get("filename", "")
-            # 如果有 .pdf 后缀，移除它
-            base_name = filename.replace('.pdf', '') if filename else "doc"
-            
-            # Ensure the collection name starts with a letter or underscore
-            if not base_name[0].isalpha() and base_name[0] != '_':
-                base_name = f"_{base_name}"
-            
-            # Get embedding provider
-            embedding_provider = embeddings_data.get("embedding_provider", "unknown")
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            collection_name = f"{base_name}_{embedding_provider}_{timestamp}"
+            collection_name = self._generate_collection_name(embeddings_data)
             
             # 连接到Milvus
             connections.connect(
@@ -284,6 +276,60 @@ class VectorStoreService:
         finally:
             connections.disconnect("default")
 
+    def _index_to_chroma(self, embeddings_data: Dict[str, Any], config: VectorDBConfig) -> Dict[str, Any]:
+        """
+        将嵌入向量索引到Chroma数据库
+      
+        """
+        try:
+            collection_name = self._generate_collection_name(embeddings_data)
+        
+            chroma_client = chromadb.PersistentClient(path=config.chroma_uri)
+
+            collection = chroma_client.create_collection(collection_name)
+            
+            # 从顶层配置获取向量维度
+            vector_dim = int(embeddings_data.get("vector_dimension"))
+            if not vector_dim:
+                raise ValueError("Missing vector_dimension in embedding file")
+            
+            logger.info(f"Creating collection with dimension: {vector_dim}")
+            
+            # 准备数据为列表格式
+            metadatas = []
+            vectors = []
+            ids = []
+            for emb in embeddings_data["embeddings"]:
+                metadata = {
+                    "content": str(emb["metadata"].get("content", "")),
+                    "document_name": embeddings_data.get("filename", ""),  # 使用 filename 而不是 document_name
+                    "chunk_id": int(emb["metadata"].get("chunk_id", 0)),
+                    "total_chunks": int(emb["metadata"].get("total_chunks", 0)),
+                    "word_count": int(emb["metadata"].get("word_count", 0)),
+                    "page_number": str(emb["metadata"].get("page_number", 0)),
+                    "page_range": str(emb["metadata"].get("page_range", "")),
+                    # "chunking_method": str(emb["metadata"].get("chunking_method", "")),
+                    "embedding_provider": embeddings_data.get("embedding_provider", ""),  # 从顶层配置获取
+                    "embedding_model": embeddings_data.get("embedding_model", ""),  # 从顶层配置获取
+                    "embedding_timestamp": str(emb["metadata"].get("embedding_timestamp", "")),
+                }
+                metadatas.append(metadata)
+                vectors.append([float(x) for x in emb.get("embedding", [])])
+                ids.append(str(emb["metadata"].get("chunk_id", 0)))
+
+            
+            # 插入数据
+            collection.add(vectors, metadatas, ids)
+         
+            return {
+                "index_size": len(ids),
+                "collection_name": collection_name
+            }
+            
+        except Exception as e:
+            logger.error(f"Error indexing to Chroma: {str(e)}")
+            raise
+        
     def list_collections(self, provider: str) -> List[str]:
         """
         列出指定提供商的所有集合
@@ -346,3 +392,29 @@ class VectorStoreService:
             finally:
                 connections.disconnect("default")
         return {}
+
+    def _generate_collection_name(self, embeddings_data: Dict[str, Any]) -> str:
+        """
+        生成集合名称
+        
+        参数:
+            embeddings_data: 嵌入向量数据
+
+        返回:
+            集合名称
+        """
+        
+         # 使用 filename 作为 collection 名称前缀
+        filename = embeddings_data.get("filename", "")
+        # 如果有 .pdf 后缀，移除它
+        base_name = filename.replace('.pdf', '') if filename else "doc"
+        
+        # Ensure the collection name starts with a letter or underscore
+        if not base_name[0].isalpha() and base_name[0] != '_':
+            base_name = f"_{base_name}"
+        
+        # Get embedding provider
+        embedding_provider = embeddings_data.get("embedding_provider", "unknown")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+        return f"{base_name}_{embedding_provider}_{timestamp}"

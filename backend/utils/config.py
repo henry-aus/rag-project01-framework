@@ -3,7 +3,12 @@ from typing import Dict, Any
 
 class VectorDBProvider(str, Enum):
     MILVUS = "milvus"
+    CHROMA = "chroma"
     # More providers can be added later
+
+CHROMA_CONFIG = {
+    "uri": "03-vector-store/chroma.db",
+}   
 
 # 可以在这里添加其他配置相关的内容
 MILVUS_CONFIG = {
