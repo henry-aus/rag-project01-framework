@@ -14,7 +14,7 @@ const Indexing = () => {
   const [selectedCollection, setSelectedCollection] = useState('');
   const [collectionDetails, setCollectionDetails] = useState(null);
   const [providers, setProviders] = useState([]);
-  const [selectedProvider, setSelectedProvider] = useState('milvus');
+  //const [selectedProvider, setSelectedProvider] = useState('milvus');
 
   // 数据库和索引模式的配置
   const dbConfigs = {
@@ -57,7 +57,7 @@ const Indexing = () => {
         setProviders(providersData.providers);
 
         // 获取collections列表
-        const collectionsResponse = await fetch(`${apiBaseUrl}/collections?provider=${selectedProvider}`);
+        const collectionsResponse = await fetch(`${apiBaseUrl}/collections?provider=${vectorDb}`);
         const collectionsData = await collectionsResponse.json();
         setCollections(collectionsData.collections);
       } catch (error) {
@@ -66,7 +66,7 @@ const Indexing = () => {
     };
 
     fetchData();
-  }, [selectedProvider]);
+  }, [vectorDb]);
 
   const fetchEmbeddedFiles = async () => {
     try {
@@ -128,12 +128,12 @@ const Indexing = () => {
     if (!collectionName) return;
     
     try {
-      const response = await fetch(`${apiBaseUrl}/collections/${selectedProvider}/${collectionName}`);
+      const response = await fetch(`${apiBaseUrl}/collections/${vectorDb}/${collectionName}`);
       const data = await response.json();
       
       // 只包含有实际值的属性
       const result = {
-        database: selectedProvider,
+        database: vectorDb,
         collection_name: data.name,
         total_vectors: data.num_entities,
         index_size: data.num_entities
@@ -160,12 +160,12 @@ const Indexing = () => {
     
     if (window.confirm(`Are you sure you want to delete collection "${collectionName}"?`)) {
       try {
-        await fetch(`${apiBaseUrl}/collections/${selectedProvider}/${collectionName}`, {
+        await fetch(`${apiBaseUrl}/collections/${vectorDb}/${collectionName}`, {
           method: 'DELETE',
         });
         setSelectedCollection('');
         // 重新获取collections列表
-        const response = await fetch(`${apiBaseUrl}/collections?provider=${selectedProvider}`);
+        const response = await fetch(`${apiBaseUrl}/collections?provider=${vectorDb}`);
         const data = await response.json();
         setCollections(data.collections);
       } catch (error) {
@@ -203,8 +203,8 @@ const Indexing = () => {
             <div>
               <label className="block text-sm font-medium mb-1">Vector Database</label>
               <select
-                value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value)}
+                value={vectorDb}
+                onChange={(e) => setVectorDb(e.target.value)}
                 className="block w-full p-2 border rounded"
               >
                 {providers.map(provider => (

@@ -26,6 +26,13 @@ const LoadFile = () => {
     fetchDocuments();
   }, []);
 
+  useEffect(() => {
+    if (file) {
+      file.type === 'application/pdf' ? setLoadingMethod('pymupdf') :
+       file.type === 'text/plain' ? setLoadingMethod('textloader') : setLoadingMethod('markdownloader');
+    }
+  }, [file]);
+
   const fetchDocuments = async () => {
     try {
       const response = await fetch(`${apiBaseUrl}/documents?type=loaded`);
@@ -236,10 +243,10 @@ const LoadFile = () => {
         <div className="col-span-3 space-y-4">
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div>
-              <label className="block text-sm font-medium mb-1">Upload PDF</label>
+              <label className="block text-sm font-medium mb-1">Upload PDF or TXT</label>
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.txt,.md"
                 onChange={(e) => setFile(e.target.files[0])}
                 className="block w-full border rounded px-3 py-2"
               />
@@ -251,10 +258,24 @@ const LoadFile = () => {
                 value={loadingMethod}
                 onChange={(e) => setLoadingMethod(e.target.value)}
                 className="block w-full p-2 border rounded"
-              >
-                <option value="pymupdf">PyMuPDF</option>
-                <option value="pypdf">PyPDF</option>
-                <option value="unstructured">Unstructured</option>
+              > 
+              { (!file || (file && file.type === 'application/pdf')) && (
+                <>
+                  <option value="pymupdf">PyMuPDF</option>
+                  <option value="pypdf">PyPDF</option>
+                  <option value="unstructured">Unstructured</option>
+                </>
+              )}
+              { file && file.type === 'text/plain' && (
+                <>
+                  <option value="textloader">TextLoader</option>
+                </>
+              )}
+              { file && file.type === 'text/markdown' && (
+                <>
+                  <option value="markdownloader">MarkdownLoader</option>
+                </>
+              )}
               </select>
             </div>
 

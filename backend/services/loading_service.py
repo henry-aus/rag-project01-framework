@@ -6,6 +6,8 @@ import logging
 import os
 from datetime import datetime
 import json
+from langchain_community.document_loaders import TextLoader, UnstructuredMarkdownLoader
+import os
 
 logger = logging.getLogger(__name__)
 """
@@ -37,7 +39,7 @@ class LoadingService:
         self.total_pages = 0
         self.current_page_map = []
     
-    def load_pdf(self, file_path: str, method: str, strategy: str = None, chunking_strategy: str = None, chunking_options: dict = None) -> str:
+    def load_file(self, file_path: str, method: str, strategy: str = None, chunking_strategy: str = None, chunking_options: dict = None) -> str:
         """
         加载PDF文档的主方法，支持多种加载策略。
 
@@ -65,10 +67,14 @@ class LoadingService:
                     chunking_strategy=chunking_strategy,
                     chunking_options=chunking_options
                 )
+            elif method == "textloader":
+                return self._load_with_textloader(file_path)
+            elif method == "markdownloader":
+                return self._load_with_markdownloader(file_path)
             else:
                 raise ValueError(f"Unsupported loading method: {method}")
         except Exception as e:
-            logger.error(f"Error loading PDF with {method}: {str(e)}")
+            logger.error(f"Error loading file with {method}: {str(e)}")
             raise
     
     def get_total_pages(self) -> int:
@@ -266,6 +272,68 @@ class LoadingService:
             logger.error(f"pdfplumber error: {str(e)}")
             raise
     
+    def _load_with_textloader(self, file_path: str) -> str:
+        """
+        使用LangChain的TextLoader加载文本文件。
+        适合加载纯文本文件，如.txt、.md等格式。
+
+        参数:
+            file_path (str): 文本文件路径
+
+        返回:
+            str: 加载的文本内容
+        """
+        try:
+            text_blocks = []
+            loader = TextLoader(file_path)
+            documents = loader.load()
+            
+            # 将整个文档作为一个页面处理
+            if documents:
+                text_blocks.append({
+                    "text": documents[0].page_content.strip(),
+                    "page": 1
+                })
+            
+            self.total_pages = 1
+            self.current_page_map = text_blocks
+            return "\n".join(block["text"] for block in text_blocks)
+            
+        except Exception as e:
+            logger.error(f"TextLoader error: {str(e)}")
+            raise
+    
+    def _load_with_markdownloader(self, file_path: str) -> str:
+        """
+        使用LangChain的UnstructuredMarkdownLoader加载Markdown文件。
+        适合加载Markdown格式的文件。
+
+        参数:
+            file_path (str): Markdown文件路径
+
+        返回:
+            str: 加载的文本内容
+        """
+        try:
+            text_blocks = []
+            loader = UnstructuredMarkdownLoader(file_path)
+            documents = loader.load()
+            
+            # 将整个文档作为一个页面处理
+            if documents:
+                text_blocks.append({
+                    "text": documents[0].page_content.strip(),
+                    "page": 1
+                })
+            
+            self.total_pages = 1
+            self.current_page_map = text_blocks
+            return "\n".join(block["text"] for block in text_blocks)
+            
+        except Exception as e:
+            logger.error(f"MarkdownLoader error: {str(e)}")
+            raise
+    
     def save_document(self, filename: str, chunks: list, metadata: dict, loading_method: str, strategy: str = None, chunking_strategy: str = None) -> str:
         """
         保存处理后的文档数据。
@@ -283,7 +351,8 @@ class LoadingService:
         """
         try:
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            base_name = filename.replace('.pdf', '').split('_')[0]
+            _root, extension = os.path.splitext(filename)
+            base_name = filename.replace(extension, '').split('_')[0]
             
             # Adjust the document name to include strategy if unstructured
             if loading_method == "unstructured" and strategy:

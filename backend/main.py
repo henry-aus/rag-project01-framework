@@ -62,7 +62,7 @@ async def process_file(
         }
         
         loading_service = LoadingService()
-        raw_text = loading_service.load_pdf(temp_path, loading_method)
+        raw_text = loading_service.load_file(temp_path, loading_method)
         metadata["total_pages"] = loading_service.get_total_pages()
         
         page_map = loading_service.get_page_map()
@@ -569,7 +569,7 @@ async def parse_file(
         }
         
         loading_service = LoadingService()
-        raw_text = loading_service.load_pdf(temp_path, loading_method)
+        raw_text = loading_service.load_file(temp_path, loading_method)
         metadata["total_pages"] = loading_service.get_total_pages()
         
         page_map = loading_service.get_page_map()
@@ -623,7 +623,7 @@ async def load_file(
         
         # 使用 LoadingService 加载文档
         loading_service = LoadingService()
-        raw_text = loading_service.load_pdf(
+        raw_text = loading_service.load_file(
             temp_path, 
             loading_method, 
             strategy=strategy,

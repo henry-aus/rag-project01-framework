@@ -172,3 +172,11 @@ cython_debug/
 
 # 忽略所有 .vscode 目录
 .vscode/
+
+temp/
+01-loaded-docs/
+01-chunked-docs/
+02-embedded-docs/
+03-vector-store/
+04-search-results/
+05-generation-results/
