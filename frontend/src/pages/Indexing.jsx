@@ -184,7 +184,7 @@ const Indexing = () => {
           <div className="p-4 border rounded-lg bg-white shadow-sm space-y-4">
             {/* Embedding File Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Embedding File</label>
+              <label className="block text-sm font-medium text-black mb-1">Embedding File</label>
               <select
                 value={embeddingFile}
                 onChange={(e) => setEmbeddingFile(e.target.value)}
@@ -201,7 +201,7 @@ const Indexing = () => {
 
             {/* Vector Database Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Vector Database</label>
+              <label className="block text-sm font-medium text-black mb-1">Vector Database</label>
               <select
                 value={vectorDb}
                 onChange={(e) => setVectorDb(e.target.value)}
@@ -217,7 +217,7 @@ const Indexing = () => {
 
             {/* Index Mode Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Index Mode</label>
+              <label className="block text-sm font-medium text-black mb-1">Index Mode</label>
               <select
                 value={indexMode}
                 onChange={(e) => setIndexMode(e.target.value)}
@@ -244,7 +244,7 @@ const Indexing = () => {
 
               {/* Collection Selection */}
               <div>
-                <label className="block text-sm font-medium mb-1">Collection</label>
+                <label className="block text-sm font-medium text-black mb-1">Collection</label>
                 <select
                   value={selectedCollection}
                   onChange={(e) => setSelectedCollection(e.target.value)}

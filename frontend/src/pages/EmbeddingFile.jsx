@@ -274,7 +274,7 @@ const EmbeddingFile = () => {
         <div className="col-span-3 space-y-4">
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div>
-              <label className="block text-sm font-medium mb-1">Select Document</label>
+              <label className="block text-sm font-medium text-black mb-1">Select Document</label>
               <div className="text-sm text-gray-500 mb-2">
                 可用文档数量: {availableDocs.length}
               </div>
@@ -293,7 +293,7 @@ const EmbeddingFile = () => {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Embedding Provider</label>
+              <label className="block text-sm font-medium text-black mb-1">Embedding Provider</label>
               <select
                 value={embeddingProvider}
                 onChange={(e) => setEmbeddingProvider(e.target.value)}
@@ -306,7 +306,7 @@ const EmbeddingFile = () => {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Model</label>
+              <label className="block text-sm font-medium text-black mb-1">Model</label>
               <select
                 value={embeddingModel}
                 onChange={(e) => setEmbeddingModel(e.target.value)}

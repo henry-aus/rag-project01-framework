@@ -64,7 +64,7 @@ const ParseFile = () => {
         <div className="col-span-3 space-y-4">
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div>
-              <label className="block text-sm font-medium mb-1">Upload PDF</label>
+              <label className="block text-sm font-medium text-black mb-1">Upload PDF</label>
               <input
                 type="file"
                 accept=".pdf"
@@ -75,7 +75,7 @@ const ParseFile = () => {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Loading Tool</label>
+              <label className="block text-sm font-medium text-black mb-1">Loading Tool</label>
               <select
                 value={loadingMethod}
                 onChange={(e) => setLoadingMethod(e.target.value)}
@@ -89,7 +89,7 @@ const ParseFile = () => {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Parsing Option</label>
+              <label className="block text-sm font-medium text-black mb-1">Parsing Option</label>
               <select
                 value={parsingOption}
                 onChange={(e) => setParsingOption(e.target.value)}

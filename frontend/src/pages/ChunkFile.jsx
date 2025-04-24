@@ -270,7 +270,7 @@ const ChunkFile = () => {
         <div className="col-span-3 space-y-4">
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Select Document</label>
+              <label className="block text-sm font-medium text-black mb-1">Select Document</label>
               <select
                 value={selectedDoc}
                 onChange={(e) => setSelectedDoc(e.target.value)}
@@ -286,7 +286,7 @@ const ChunkFile = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Chunking Method</label>
+              <label className="block text-sm font-medium text-black mb-1">Chunking Method</label>
               <select
                 value={chunkingOption}
                 onChange={(e) => setChunkingOption(e.target.value)}
@@ -301,7 +301,7 @@ const ChunkFile = () => {
 
             {chunkingOption === 'fixed_size' && (
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Chunk Size</label>
+                <label className="block text-sm font-medium text-black mb-1">Chunk Size</label>
                 <input
                   type="number"
                   value={chunkSize}

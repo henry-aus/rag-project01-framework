@@ -139,7 +139,7 @@ const Search = () => {
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Your Question</label>
+                <label className="block text-sm font-medium text-black mb-1">Search Query</label>
                 <textarea
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -149,7 +149,7 @@ const Search = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Vector Database</label>
+                <label className="block text-sm font-medium text-black mb-1">Vector Database</label>
                 <select
                   value={selectedProvider}
                   onChange={(e) => setSelectedProvider(e.target.value)}
@@ -164,7 +164,7 @@ const Search = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Collection</label>
+                <label className="block text-sm font-medium text-black mb-1">Collection</label>
                 <select
                   value={collection}
                   onChange={(e) => setCollection(e.target.value)}
@@ -180,7 +180,7 @@ const Search = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Top K Results</label>
+                <label className="block text-sm font-medium text-black mb-1">Top K</label>
                 <input
                   type="number"
                   value={topK}
@@ -192,9 +192,7 @@ const Search = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Similarity Threshold: {threshold}
-                </label>
+                <label className="block text-sm font-medium text-black mb-1">Similarity Threshold</label>
                 <input
                   type="range"
                   value={threshold}
@@ -207,9 +205,7 @@ const Search = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Minimum Word Count: {wordCountThreshold}
-                </label>
+                <label className="block text-sm font-medium text-black mb-1">Word Count Threshold</label>
                 <input
                   type="range"
                   value={wordCountThreshold}

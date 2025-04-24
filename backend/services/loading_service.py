@@ -7,7 +7,9 @@ import os
 from datetime import datetime
 import json
 from langchain_community.document_loaders import TextLoader, UnstructuredMarkdownLoader
-import os
+import unstructured_client
+from unstructured_client.models import shared
+from utils.file import get_file_name_without_ext
 
 logger = logging.getLogger(__name__)
 """
@@ -177,23 +179,71 @@ class LoadingService:
             chunking_params = {}
             if chunking_strategy == "basic":
                 chunking_params = {
+                    "chunking_strategy": "basic",
                     "max_characters": chunking_options.get("maxCharacters", 4000),
                     "new_after_n_chars": chunking_options.get("newAfterNChars", 3000),
-                    "combine_text_under_n_chars": chunking_options.get("combineTextUnderNChars", 2000),
                     "overlap": chunking_options.get("overlap", 200),
-                    "overlap_all": chunking_options.get("overlapAll", False)
+                    "overlap_all": chunking_options.get("overlapAll", False),
+                    "include_orig_elements":  chunking_options.get("includeOrigElements", False)
                 }
             elif chunking_strategy == "by_title":
                 chunking_params = {
                     "chunking_strategy": "by_title",
+                    "max_characters": chunking_options.get("maxCharacters", 4000),
+                    "new_after_n_chars": chunking_options.get("newAfterNChars", 3000),
+                    "overlap": chunking_options.get("overlap", 200),
+                    "overlap_all": chunking_options.get("overlapAll", False),
+                    "include_orig_elements":  chunking_options.get("includeOrigElements", False),
                     "combine_text_under_n_chars": chunking_options.get("combineTextUnderNChars", 2000),
                     "multipage_sections": chunking_options.get("multiPageSections", False)
                 }
+            elif chunking_strategy == "by_similarity":
+                chunking_params = {
+                    "chunking_strategy": "by_similarity",
+                    "max_characters": chunking_options.get("maxCharacters", 4000),
+                    "new_after_n_chars": chunking_options.get("newAfterNChars", 3000),
+                    "overlap": chunking_options.get("overlap", 200),
+                    "overlap_all": chunking_options.get("overlapAll", False),
+                    "include_orig_elements":  chunking_options.get("includeOrigElements", False),
+                    "similarity_threshold": chunking_options.get("similarityThreshold", 0.7),
+                }
+            elif chunking_strategy == "by_page":
+                chunking_params = {
+                    "chunking_strategy": "by_page",
+                    "max_characters": chunking_options.get("maxCharacters", 4000),
+                    "new_after_n_chars": chunking_options.get("newAfterNChars", 3000),
+                    "overlap": chunking_options.get("overlap", 200),
+                    "overlap_all": chunking_options.get("overlapAll", False),
+                    "include_orig_elements":  chunking_options.get("includeOrigElements", False)
+                }
+
+            elements = None        
             
             # Combine strategy parameters with chunking parameters
             params = {**strategy_params.get(strategy, {"strategy": "fast"}), **chunking_params}
             
-            elements = partition_pdf(file_path, **params)
+            # Use different approaches based on chunking strategy
+            if chunking_strategy in ["basic", "by_title"]:
+                # Use partition_pdf for basic and by_title strategies
+                elements = partition_pdf(file_path, **params)
+            else:
+                # Use unstructured_client for other strategies
+                client = unstructured_client.UnstructuredClient(
+                    api_key_auth=os.getenv("UNSTRUCTURED_API_KEY")
+                )
+                
+                # Prepare the request
+                req = shared.PartitionParameters(
+                    files=shared.Files(
+                        content=open(file_path, "rb").read(),
+                        file_name=os.path.basename(file_path)
+                    ),
+                    **params
+                )
+                
+                # Make the API call
+                resp = client.general.partition(req)
+                elements = resp.elements
             
             # Add debug logging
             for elem in elements:
@@ -351,8 +401,7 @@ class LoadingService:
         """
         try:
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            _root, extension = os.path.splitext(filename)
-            base_name = filename.replace(extension, '').split('_')[0]
+            base_name = get_file_name_without_ext(filename)
             
             # Adjust the document name to include strategy if unstructured
             if loading_method == "unstructured" and strategy:

@@ -11,10 +11,12 @@ const LoadFile = () => {
   const [chunkingOptions, setChunkingOptions] = useState({
     maxCharacters: 4000,
     newAfterNChars: 3000,
-    combineTextUnderNChars: 500,
     overlap: 200,
     overlapAll: false,
-    multiPageSections: false
+    includeOrigElements: false,
+    combineTextUnderNChars: 500,
+    multiPageSections: false,
+    similarityThreshold: 0.7
   });
   const [loadedContent, setLoadedContent] = useState(null);
   const [status, setStatus] = useState('');
@@ -29,7 +31,7 @@ const LoadFile = () => {
   useEffect(() => {
     if (file) {
       file.type === 'application/pdf' ? setLoadingMethod('pymupdf') :
-       file.type === 'text/plain' ? setLoadingMethod('textloader') : setLoadingMethod('markdownloader');
+        file.type === 'text/plain' ? setLoadingMethod('textloader') : setLoadingMethod('markdownloader');
     }
   }, [file]);
 
@@ -56,7 +58,7 @@ const LoadFile = () => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('loading_method', loadingMethod);
-      
+
       if (loadingMethod === 'unstructured') {
         formData.append('strategy', unstructuredStrategy);
         formData.append('chunking_strategy', chunkingStrategy);
@@ -130,21 +132,19 @@ const LoadFile = () => {
         {/* 标签页切换 */}
         <div className="flex mb-4 border-b">
           <button
-            className={`px-4 py-2 ${
-              activeTab === 'preview'
-                ? 'border-b-2 border-blue-500 text-blue-600'
-                : 'text-gray-600'
-            }`}
+            className={`px-4 py-2 ${activeTab === 'preview'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600'
+              }`}
             onClick={() => setActiveTab('preview')}
           >
             Document Preview
           </button>
           <button
-            className={`px-4 py-2 ml-4 ${
-              activeTab === 'documents'
-                ? 'border-b-2 border-blue-500 text-blue-600'
-                : 'text-gray-600'
-            }`}
+            className={`px-4 py-2 ml-4 ${activeTab === 'documents'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600'
+              }`}
             onClick={() => setActiveTab('documents')}
           >
             Document Management
@@ -163,7 +163,7 @@ const LoadFile = () => {
                   <p>Chunks: {loadedContent.total_chunks || 'N/A'}</p>
                   <p>Loading Method: {loadedContent.loading_method || 'N/A'}</p>
                   <p>Chunking Method: {loadedContent.chunking_method || 'N/A'}</p>
-                  <p>Processing Date: {loadedContent.timestamp ? 
+                  <p>Processing Date: {loadedContent.timestamp ?
                     new Date(loadedContent.timestamp).toLocaleString() : 'N/A'}</p>
                 </div>
               </div>
@@ -201,7 +201,7 @@ const LoadFile = () => {
                         <p>Chunks: {doc.metadata?.total_chunks || 'N/A'}</p>
                         <p>Loading Method: {doc.metadata?.loading_method || 'N/A'}</p>
                         <p>Chunking Method: {doc.metadata?.chunking_method || 'N/A'}</p>
-                        <p>Created: {doc.metadata?.timestamp ? 
+                        <p>Created: {doc.metadata?.timestamp ?
                           new Date(doc.metadata.timestamp).toLocaleString() : 'N/A'}</p>
                       </div>
                     </div>
@@ -237,13 +237,13 @@ const LoadFile = () => {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-6">Load File</h2>
-      
+
       <div className="grid grid-cols-12 gap-6">
         {/* Left Panel */}
         <div className="col-span-3 space-y-4">
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div>
-              <label className="block text-sm font-medium mb-1">Upload PDF or TXT</label>
+              <label className="block text-sm font-medium text-black mb-1">Upload PDF/TEXT/MARKDOWN File</label>
               <input
                 type="file"
                 accept=".pdf,.txt,.md"
@@ -253,36 +253,36 @@ const LoadFile = () => {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Loading Method</label>
+              <label className="block text-sm font-medium text-black mb-1">Loading Method</label>
               <select
                 value={loadingMethod}
                 onChange={(e) => setLoadingMethod(e.target.value)}
                 className="block w-full p-2 border rounded"
-              > 
-              { (!file || (file && file.type === 'application/pdf')) && (
-                <>
-                  <option value="pymupdf">PyMuPDF</option>
-                  <option value="pypdf">PyPDF</option>
-                  <option value="unstructured">Unstructured</option>
-                </>
-              )}
-              { file && file.type === 'text/plain' && (
-                <>
-                  <option value="textloader">TextLoader</option>
-                </>
-              )}
-              { file && file.type === 'text/markdown' && (
-                <>
-                  <option value="markdownloader">MarkdownLoader</option>
-                </>
-              )}
+              >
+                {(!file || (file && file.type === 'application/pdf')) && (
+                  <>
+                    <option value="pymupdf">PyMuPDF</option>
+                    <option value="pypdf">PyPDF</option>
+                    <option value="unstructured">Unstructured</option>
+                  </>
+                )}
+                {file && file.type === 'text/plain' && (
+                  <>
+                    <option value="textloader">TextLoader</option>
+                  </>
+                )}
+                {file && file.type === 'text/markdown' && (
+                  <>
+                    <option value="markdownloader">MarkdownLoader</option>
+                  </>
+                )}
               </select>
             </div>
 
             {loadingMethod === 'unstructured' && (
               <>
                 <div className="mt-4">
-                  <label className="block text-sm font-medium mb-1">Unstructured Strategy</label>
+                  <label className="block text-sm font-medium text-black mb-1">Unstructured Strategy</label>
                   <select
                     value={unstructuredStrategy}
                     onChange={(e) => setUnstructuredStrategy(e.target.value)}
@@ -295,7 +295,7 @@ const LoadFile = () => {
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium mb-1">Chunking Strategy</label>
+                  <label className="block text-sm font-medium text-black mb-1">Chunking Strategy</label>
                   <select
                     value={chunkingStrategy}
                     onChange={(e) => setChunkingStrategy(e.target.value)}
@@ -303,121 +303,138 @@ const LoadFile = () => {
                   >
                     <option value="basic">Basic</option>
                     <option value="by_title">By Title</option>
+                    <option value="by_similarity">By Similarity</option>
+                    <option value="by_page">By Page</option>
                   </select>
                 </div>
 
-                {chunkingStrategy === 'basic' && (
-                  <div className="mt-4 space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Max Characters</label>
-                      <input
-                        type="number"
-                        value={chunkingOptions.maxCharacters}
-                        onChange={(e) => setChunkingOptions(prev => ({
-                          ...prev,
-                          maxCharacters: parseInt(e.target.value)
-                        }))}
-                        className="block w-full p-2 border rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">New After N Chars</label>
-                      <input
-                        type="number"
-                        value={chunkingOptions.newAfterNChars}
-                        onChange={(e) => setChunkingOptions(prev => ({
-                          ...prev,
-                          newAfterNChars: parseInt(e.target.value)
-                        }))}
-                        className="block w-full p-2 border rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Combine Text Under N Chars</label>
-                      <input
-                        type="number"
-                        value={chunkingOptions.combineTextUnderNChars}
-                        onChange={(e) => setChunkingOptions(prev => ({
-                          ...prev,
-                          combineTextUnderNChars: parseInt(e.target.value)
-                        }))}
-                        className="block w-full p-2 border rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Overlap</label>
-                      <input
-                        type="number"
-                        value={chunkingOptions.overlap}
-                        onChange={(e) => setChunkingOptions(prev => ({
-                          ...prev,
-                          overlap: parseInt(e.target.value)
-                        }))}
-                        className="block w-full p-2 border rounded"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={chunkingOptions.overlapAll}
-                        onChange={(e) => setChunkingOptions(prev => ({
-                          ...prev,
-                          overlapAll: e.target.checked
-                        }))}
-                        className="mr-2"
-                      />
-                      <label className="text-sm font-medium">Overlap All</label>
-                    </div>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-1">Max Characters</label>
+                    <input
+                      type="number"
+                      value={chunkingOptions.maxCharacters}
+                      onChange={(e) => setChunkingOptions(prev => ({
+                        ...prev,
+                        maxCharacters: parseInt(e.target.value)
+                      }))}
+                      className="block w-full p-2 border rounded"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-1">New After N Chars</label>
+                    <input
+                      type="number"
+                      value={chunkingOptions.newAfterNChars}
+                      onChange={(e) => setChunkingOptions(prev => ({
+                        ...prev,
+                        newAfterNChars: parseInt(e.target.value)
+                      }))}
+                      className="block w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-1">Overlap</label>
+                    <input
+                      type="number"
+                      value={chunkingOptions.overlap}
+                      onChange={(e) => setChunkingOptions(prev => ({
+                        ...prev,
+                        overlap: parseInt(e.target.value)
+                      }))}
+                      className="block w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={chunkingOptions.overlapAll}
+                      onChange={(e) => setChunkingOptions(prev => ({
+                        ...prev,
+                        overlapAll: e.target.checked
+                      }))}
+                      className="mr-2"
+                    />
+                    <label className="text-sm font-medium text-black">Overlap All</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={chunkingOptions.includeOrigElements}
+                      onChange={(e) => setChunkingOptions(prev => ({
+                        ...prev,
+                        includeOrigElements: e.target.checked
+                      }))}
+                      className="mr-2"
+                    />
+                    <label className="text-sm font-medium text-black">Include Origin Elements</label>
+                  </div>
 
-                {chunkingStrategy === 'by_title' && (
-                  <div className="mt-4 space-y-3">
+                  {chunkingStrategy === 'by_title' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-black mb-1">Combine Text Under N Chars</label>
+                        <input
+                          type="number"
+                          value={chunkingOptions.combineTextUnderNChars}
+                          onChange={(e) => setChunkingOptions(prev => ({
+                            ...prev,
+                            combineTextUnderNChars: parseInt(e.target.value)
+                          }))}
+                          className="block w-full p-2 border rounded"
+                        />
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={chunkingOptions.multiPageSections}
+                          onChange={(e) => setChunkingOptions(prev => ({
+                            ...prev,
+                            multiPageSections: e.target.checked
+                          }))}
+                          className="mr-2"
+                        />
+                        <label className="text-sm font-medium text-black">Multi-page Sections</label>
+                      </div>
+                    </div>
+                  )}
+
+                  {chunkingStrategy === 'by_similarity' && (
                     <div>
-                      <label className="block text-sm font-medium mb-1">Combine Text Under N Chars</label>
+                      <label className="block text-sm font-medium text-black mb-1">Similarity Threshold</label>
                       <input
                         type="number"
-                        value={chunkingOptions.combineTextUnderNChars}
+                        step="0.1"
+                        min="0"
+                        max="1"
+                        value={chunkingOptions.similarityThreshold}
                         onChange={(e) => setChunkingOptions(prev => ({
                           ...prev,
-                          combineTextUnderNChars: parseInt(e.target.value)
+                          similarityThreshold: parseFloat(e.target.value)
                         }))}
                         className="block w-full p-2 border rounded"
                       />
                     </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={chunkingOptions.multiPageSections}
-                        onChange={(e) => setChunkingOptions(prev => ({
-                          ...prev,
-                          multiPageSections: e.target.checked
-                        }))}
-                        className="mr-2"
-                      />
-                      <label className="text-sm font-medium">Multi-page Sections</label>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
+
               </>
             )}
 
-            <button 
+            <button
               onClick={handleProcess}
               className="mt-4 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               disabled={!file}
             >
               Load File
             </button>
-          </div>
 
-          {status && (
-            <div className={`p-4 rounded-lg ${
-              status.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-            }`}>
-              {status}
-            </div>
-          )}
+            {status && (
+              <div className={`p-4 rounded-lg ${status.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                {status}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Panel */}

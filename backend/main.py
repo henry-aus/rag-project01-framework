@@ -10,12 +10,13 @@ from services.vector_store_service import VectorStoreService, VectorDBConfig
 from services.search_service import SearchService
 from services.parsing_service import ParsingService
 import logging
-from enum import Enum
+# from enum import Enum
 from utils.config import VectorDBProvider
 import pandas as pd
 from pathlib import Path
 from services.generation_service import GenerationService
 from typing import List, Dict, Optional
+from utils.file import get_file_name_without_ext
 
 # 设置日志
 logging.basicConfig(level=logging.INFO)
@@ -722,7 +723,7 @@ async def chunk_document(data: dict = Body(...)):
         
         # 生成输出文件名
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        base_name = doc_data['filename'].replace('.pdf', '').split('_')[0]
+        base_name = get_file_name_without_ext(doc_data['filename'])
         output_filename = f"{base_name}_{chunking_option}_{timestamp}.json"
         
         output_path = os.path.join("01-chunked-docs", output_filename)
