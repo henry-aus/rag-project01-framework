@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RandomImage from '../components/RandomImage';
 import { apiBaseUrl } from '../config/config';
 
@@ -10,6 +10,13 @@ const ParseFile = () => {
   const [status, setStatus] = useState('');
   const [docName, setDocName] = useState('');
   const [isProcessed, setIsProcessed] = useState(false);
+
+  useEffect(() => {
+    if (file) {
+      file.type === 'application/pdf' ? setLoadingMethod('pymupdf') :
+        file.type === 'text/plain' ? setLoadingMethod('textloader') : setLoadingMethod('markdownloader');
+    }
+  }, [file]);
 
   const handleProcess = async () => {
     if (!file || !loadingMethod || !parsingOption) {
@@ -50,7 +57,9 @@ const ParseFile = () => {
     const file = e.target.files[0];
     if (file) {
       setFile(file);
-      const baseName = file.name.replace('.pdf', '');
+      var baseName = file.name.replace('.pdf', '');
+      baseName = baseName.replace('.txt', '');
+      baseName = baseName.replace('.md', '');
       setDocName(baseName);
     }
   };
@@ -64,10 +73,10 @@ const ParseFile = () => {
         <div className="col-span-3 space-y-4">
           <div className="p-4 border rounded-lg bg-white shadow-sm">
             <div>
-              <label className="block text-sm font-medium text-black mb-1">Upload PDF</label>
+              <label className="block text-sm font-medium text-black mb-1">Upload PDF/TEXT/MARKDOWN File</label>
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.txt,.md"
                 onChange={handleFileSelect}
                 className="block w-full border rounded px-3 py-2"
                 required
@@ -81,10 +90,23 @@ const ParseFile = () => {
                 onChange={(e) => setLoadingMethod(e.target.value)}
                 className="block w-full p-2 border rounded"
               >
-                <option value="pymupdf">PyMuPDF</option>
-                <option value="pypdf">PyPDF</option>
-                <option value="unstructured">Unstructured</option>
-                <option value="pdfplumber">PDF Plumber</option>
+                {(!file || (file && file.type === 'application/pdf')) && (
+                  <>
+                    <option value="pymupdf">PyMuPDF</option>
+                    <option value="pypdf">PyPDF</option>
+                    <option value="unstructured">Unstructured</option>
+                  </>
+                )}
+                {file && file.type === 'text/plain' && (
+                  <>
+                    <option value="textloader">TextLoader</option>
+                  </>
+                )}
+                {file && file.type === 'text/markdown' && (
+                  <>
+                    <option value="markdownloader">MarkdownLoader</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -99,6 +121,11 @@ const ParseFile = () => {
                 <option value="by_pages">By Pages</option>
                 <option value="by_titles">By Titles</option>
                 <option value="text_and_tables">Text and Tables</option>
+                {loadingMethod === 'unstructured' && (
+                  <>
+                     <option value="text_tables_and_image">Text Tables and Image</option>
+                  </>
+                )}
               </select>
             </div>
 

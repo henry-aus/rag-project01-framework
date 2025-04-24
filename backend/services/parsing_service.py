@@ -3,6 +3,7 @@ from typing import Dict, List
 import fitz  # PyMuPDF
 import pandas as pd
 from datetime import datetime
+from unstructured.documents.elements import ElementType
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class ParsingService:
     - 文本和表格混合解析
     """
 
-    def parse_pdf(self, text: str, method: str, metadata: dict, page_map: list = None) -> dict:
+    def parse_file(self, text: str, method: str, metadata: dict, page_map: list = None) -> dict:
         """
         使用指定方法解析PDF文档
 
@@ -48,6 +49,8 @@ class ParsingService:
                 parsed_content = self._parse_by_titles(page_map)
             elif method == "text_and_tables":
                 parsed_content = self._parse_text_and_tables(page_map)
+            elif method == "text_tables_and_image":
+                parsed_content = self._parse_text_tables_and_image(page_map)    
             else:
                 raise ValueError(f"Unsupported parsing method: {method}")
                 
@@ -178,4 +181,45 @@ class ParsingService:
                     "content": content,
                     "page": page["page"]
                 })
+        return parsed_content
+
+    def _parse_text_tables_and_image(self, page_map: list) -> list:
+        """
+        根据页面的元数据类别属性解析文档内容, 该方法只能使用到通过unstructured load的文件结果上。
+
+        参数:
+            page_map (list): 包含每页内容和元数据的字典列表
+
+        返回:
+            list: 按类别组织的文档内容列表，每个元素包含类型、内容和页码
+        """
+        parsed_content = []
+        
+        for page in page_map:
+            if not page.get("metadata"):
+                continue
+                
+            category = page["metadata"].get("category")
+            if not category:
+                continue
+                
+            if category in [ElementType.TEXT, ElementType.NARRATIVE_TEXT, ElementType.BULLETED_TEXT, ElementType.UNCATEGORIZED_TEXT]:
+                parsed_content.append({
+                    "type": "text",
+                    "content": page["text"],
+                    "page": page["page"]
+                })
+            elif category == ElementType.TABLE:
+                parsed_content.append({
+                    "type": "table",
+                    "content": page["text"],
+                    "page": page["page"]
+                }) 
+            elif category == ElementType.IMAGE:
+                parsed_content.append({
+                    "type": "image",
+                    "content": page["text"],
+                    "page": page["page"]
+                })        
+                
         return parsed_content 

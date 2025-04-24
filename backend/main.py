@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body, Query, Request, Depends
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from services.loading_service import LoadingService
 from services.chunking_service import ChunkingService
@@ -624,7 +624,7 @@ async def load_file(
         
         # 使用 LoadingService 加载文档
         loading_service = LoadingService()
-        raw_text = loading_service.load_file(
+        _ = loading_service.load_file(
             temp_path, 
             loading_method, 
             strategy=strategy,
